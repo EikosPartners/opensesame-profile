@@ -1,6 +1,6 @@
 {
   "name": "opensesame-profile",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A profile provider for opensesame that implements checkUser and registerUser",
   "main": "index.js",
   "scripts": {
