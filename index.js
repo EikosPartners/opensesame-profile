@@ -24,7 +24,7 @@ module.exports = {
           callback('Incorrect password');
         }
       } else {
-
+        callback('User does not exist');
       }
     } else {
       callback('Database cannot be read');
