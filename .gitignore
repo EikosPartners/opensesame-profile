@@ -1,3 +1,6 @@
 node_modules
 data.json
 coverage/
+
+roles.json
+users.json

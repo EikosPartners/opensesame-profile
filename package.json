@@ -2,8 +2,9 @@
   "name": "opensesame-profile",
   "version": "1.0.1",
   "description": "A profile provider for opensesame that implements checkUser and registerUser",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
+    "start": "node ./bin/www",
     "test": "mocha tests/**/*.js --reporter spec -C --timeout 15000",
     "test-coverage": "istanbul cover _mocha tests/**/*.js --print detail"
   },
@@ -15,12 +16,17 @@
   "author": "Peter Fatyga",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^1.15.2",
+    "cookie-parser": "^1.4.3",
     "debug": "^2.2.0",
-    "jsonfile": "^2.3.1"
+    "ep-utils": "0.0.6",
+    "express": "^4.14.0",
+    "lodash": "^4.13.1",
+    "morgan": "^1.7.0",
+    "path": "^0.12.7"
   },
   "devDependencies": {
     "chai": "^3.5.0",
-    "fs": "0.0.2",
     "mocha": "^2.5.3"
   }
 }
