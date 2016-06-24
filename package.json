@@ -1,10 +1,9 @@
 {
   "name": "opensesame-profile",
-  "version": "1.0.1",
-  "description": "A profile provider for opensesame that implements checkUser and registerUser",
+  "version": "2.0.0",
+  "description": "A solution for applications that use PJSON to gain profile capabilities and user management",
   "main": "app.js",
   "scripts": {
-    "start": "node ./bin/www",
     "test": "mocha tests/**/*.js --reporter spec -C --timeout 15000",
     "test-coverage": "istanbul cover _mocha tests/**/*.js --print detail"
   },
@@ -17,12 +16,10 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.15.2",
-    "cookie-parser": "^1.4.3",
     "debug": "^2.2.0",
     "ep-utils": "0.0.6",
     "express": "^4.14.0",
     "lodash": "^4.13.1",
-    "morgan": "^1.7.0",
     "opensesame": "github:eikospartners/opensesame",
     "path": "^0.12.7"
   },

@@ -5,8 +5,7 @@ var JsonStorageService = require(path.join(__dirname, '../services/JsonStorageSe
 var roleService = new JsonStorageService('roles.json');
 
 router.get('/', (req, res, next) => {
-  roleService.getAll((err, roles) => {
-    console.log('got all');
+  roleService.getAll((err, roles) => {    
     if(!err) {
       res.json(roles);
     } else {
