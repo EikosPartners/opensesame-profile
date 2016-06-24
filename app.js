@@ -5,12 +5,12 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var opensesame = require('opensesame');
-var JsonStorageService = require('./services/JsonStorageService');
+var JsonStorageService = require('./server/services/JsonStorageService');
 
 var userService = new JsonStorageService('users.json');
 
-var user = require('./routes/user');
-var role = require('./routes/role');
+var user = require('./server/routes/user');
+var role = require('./server/routes/role');
 
 var app = express();
 
@@ -45,6 +45,9 @@ app = opensesame({
 
 app.use('/profile/user', user);
 app.use('/profile/role', role);
+
+var bundler = require('./server/bundler.js');
+bundler(app);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
