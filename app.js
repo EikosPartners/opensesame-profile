@@ -23,13 +23,14 @@ module.exports = function(config, app) {
       userService.get(userObject.user, (err, user) => {
         if(err) {
           return callback(err);
-        } else {
+        } else {          
           return callback(null, user);
         }
       });
     },
     registerUser: (userObject, callback) => {
-      userService.create(userObject.user, userObject, (err, user) => {
+      //don't set the roles property on the user during registration
+      userService.create(userObject.user, _.omit(userObject, 'roles'), (err, user) => {
         if(err) {
           return callback(err);
         } else {
