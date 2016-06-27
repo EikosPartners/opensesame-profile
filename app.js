@@ -1,5 +1,6 @@
 var express = require('express');
 var _ = require('lodash');
+var debug = require('debug')('opensesame-profile');
 var bodyParser = require('body-parser');
 var opensesame = require('opensesame');
 var JsonStorageService = require('./services/JsonStorageService');
@@ -23,18 +24,27 @@ module.exports = function(config, app) {
       userService.get(userObject.user, (err, user) => {
         if(err) {
           return callback(err);
-        } else {          
-          return callback(null, user);
+        } else {
+          debug('app.js:27', user);
+          if(user.data.user === userObject.user && user.data.pass === userObject.pass)
+            return callback(null, _.omit(user.data, ['pass', 'pass2']));
+          else {
+            return callback('Incorrect password');
+          }
         }
       });
     },
     registerUser: (userObject, callback) => {
-      //don't set the roles property on the user during registration
-      userService.create(userObject.user, _.omit(userObject, 'roles'), (err, user) => {
+      let user = {
+        roles: [],
+        data: userObject
+      };
+      // console.log(user);
+      userService.create(userObject.user, user, (err, user) => {
         if(err) {
           return callback(err);
         } else {
-          return callback(null, userObject);
+          return callback(null, _.omit(user.data, ['pass', 'pass2']));
         }
       });
     }

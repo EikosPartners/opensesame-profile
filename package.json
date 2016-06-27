@@ -1,6 +1,6 @@
 {
   "name": "opensesame-profile",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "A solution for applications that use PJSON to gain profile capabilities and user management",
   "main": "app.js",
   "scripts": {
@@ -26,6 +26,8 @@
   },
   "devDependencies": {
     "chai": "^3.5.0",
-    "mocha": "^2.5.3"
+    "ep-utils": "0.0.6",
+    "mocha": "^2.5.3",
+    "supertest": "^1.2.0"
   }
 }

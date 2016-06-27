@@ -1,2 +1,2 @@
 
-Implements the checkUser and registerUser function required for using opensesame.
+A solution for applications that use PJSON to gain profile capabilities and user management
