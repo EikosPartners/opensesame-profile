@@ -27,7 +27,7 @@ module.exports = function(config, app) {
         } else {
           debug('app.js:27', user);
           if(user.data.user === userObject.user && user.data.pass === userObject.pass)
-            return callback(null, _.omit(user.data, ['pass', 'pass2']));
+            return callback(null, { roles: user.roles, data: _.omit(user.data, ['pass', 'pass2']) });
           else {
             return callback('Incorrect password');
           }
@@ -44,10 +44,19 @@ module.exports = function(config, app) {
         if(err) {
           return callback(err);
         } else {
-          return callback(null, _.omit(user.data, ['pass', 'pass2']));
+          return callback(null, { roles: user.roles, data: _.omit(user.data, ['pass', 'pass2']) });
         }
       });
-    }
+    },
+    refreshUser: (userObject, callback) => {
+      userService.get(userObject.user, (err, user) => {
+        if(err) {
+          return callback(err);
+        } else {
+            return callback(null, { roles: user.roles, data: _.omit(user.data, ['pass', 'pass2']) });          
+        }
+      });
+    },
   }), app);
 
   app.use('/profile/user', user);

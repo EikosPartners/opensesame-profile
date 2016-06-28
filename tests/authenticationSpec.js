@@ -23,8 +23,10 @@ app.get('/', function (req, res) {
 
 app.get('/test', function (req, res) {
   expect(req).to.have.property('user');
-  expect(req.user).to.have.property('user');
-  expect(req.user.user).to.equal('peter');
+  expect(req.user).to.have.property('data');
+  expect(req.user).to.have.property('roles');
+  expect(req.user.data).to.be.an('object');
+  expect(req.user.data).to.have.ownProperty('user');
   res.status(200).end();
 });
 
@@ -65,8 +67,12 @@ describe('Authentication Test', function () {
           expect(token).to.not.be.a('undefined');
           var decoded = jwt.verify(token, config.secret);
           expect(decoded).to.be.an('object');
-          expect(decoded).to.have.ownProperty('user');
-          expect(decoded.user).to.equal('peter');
+          expect(decoded).to.have.ownProperty('data');
+          expect(decoded.data).to.be.an('object');
+          expect(decoded.data).to.have.ownProperty('user');
+          expect(decoded.data).to.not.have.ownProperty('pass');
+          expect(decoded.data).to.not.have.ownProperty('pass2');
+          expect(decoded.data.user).to.equal('peter');
         })
         .end(done);
     });
@@ -121,8 +127,12 @@ describe('Authentication Test', function () {
           expect(token).to.not.be.a('undefined');
           var decoded = jwt.verify(token, config.secret);
           expect(decoded).to.be.an('object');
-          expect(decoded).to.have.ownProperty('user');
-          expect(decoded.user).to.equal('peter');
+          expect(decoded).to.have.ownProperty('data');
+          expect(decoded.data).to.be.an('object');
+          expect(decoded.data).to.have.ownProperty('user');
+          expect(decoded.data).to.not.have.ownProperty('pass');
+          expect(decoded.data).to.not.have.ownProperty('pass2');
+          expect(decoded.data.user).to.equal('peter');
         })
         .end(done);
     });
