@@ -1,6 +1,6 @@
 {
   "name": "opensesame-profile",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "A solution for applications that use PJSON to gain profile capabilities and user management",
   "main": "app.js",
   "scripts": {

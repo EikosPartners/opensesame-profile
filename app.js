@@ -48,12 +48,12 @@ module.exports = function(config, app) {
         }
       });
     },
-    refreshUser: (userObject, callback) => {
-      userService.get(userObject.user, (err, user) => {
+    refreshUser: (jwtUserData, callback) => {
+      userService.get(jwtUserData.data.user, (err, user) => {
         if(err) {
           return callback(err);
         } else {
-            return callback(null, { roles: user.roles, data: _.omit(user.data, ['pass', 'pass2']) });          
+            return callback(null, { roles: user.roles, data: _.omit(user.data, ['pass', 'pass2']) });
         }
       });
     },
