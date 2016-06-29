@@ -59,6 +59,10 @@ module.exports = function(config, app) {
     },
   }), app);
 
+  if(config.middleware) {
+    app.use(config.middleware);
+  }
+
   app.use('/profile/user', user);
   app.use('/profile/role', role);
 

@@ -74,8 +74,7 @@ router.put('/', (req, res, next) => {
       userService.updateAll(_.assignIn(users, updatedUsers), (err, users) => {
         if(err) {
           res.status(500).end();
-        } else {
-          console.log('users', users);
+        } else {          
           res.json(users);
         }
       });

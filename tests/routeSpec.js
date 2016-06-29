@@ -10,7 +10,15 @@ var chai = require('chai'),
 
 let config = {
   secret: 'testSecret',
-  httpsOnly: false
+  httpsOnly: false,
+  middleware: function(req, res, next) {
+    expect(req).to.have.ownProperty('user');
+    if(req.user.data.user === 'peter2') {
+      return res.status(401).end();
+    } else {
+      next();
+    }
+  }
 };
 
 let app = opensesameProfile(config);
@@ -185,6 +193,28 @@ describe('Route tests', () => {
         .expect(200, { user: 'peter2', pass: 'test', hairColor: 'blue', allowedModules: ['dynamicModule', 'moduleA', 'moduleB', 'moduleOwner'], allowedRoutes: ['/admin'] }, done);
     });
 
+    it('should run the middleware', function (done) {
+      //login as unauthorized user
+      agent
+        .post('/auth/login')
+        .type('form')
+        .send({ user: 'peter2', pass: 'test' })
+        .end(function () {
+          //after login, make request to protected route
+          agent
+            .get('/profile/user')
+            .expect(401)
+            .end(function () {
+              //log back in as authorized user for next tests
+              agent
+                .post('/auth/login')
+                .type('form')
+                .send({ user: 'peter', pass: 'abc123' })
+                .end(done);
+            });
+        });
+    });
+
     it('should delete a user', (done) => {
       agent
         .delete('/profile/user/peter2')
@@ -207,5 +237,6 @@ describe('Route tests', () => {
           }
         }, done);
     });
+
   }); //user tests
 });
