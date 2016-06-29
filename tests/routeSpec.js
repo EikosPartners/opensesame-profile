@@ -89,6 +89,40 @@ describe('Route tests', () => {
         .expect(200, { user: 'peter2', pass: 'test', hairColor: 'blue' }, done);
     });
 
+    it('should update many users', (done) => {
+      agent
+        .put('/profile/user')
+        .send({
+          peter: {
+            roles: ['admin'],
+            data: {
+              user: 'peter',
+              pass: 'abc123',
+              bloodType: 'A+'
+            }
+          }
+        })
+        .expect('Content-Type', /json/)
+        .expect(200, {
+          peter: {
+            roles: ['admin'],
+            data: {
+              user: 'peter',
+              pass: 'abc123',
+              bloodType: 'A+'
+            }
+          },
+          peter2: {
+            roles: [],
+            data: {
+              user: 'peter2',
+              pass: 'test',
+              hairColor: 'blue'
+            }
+          }
+        }, done);
+    });
+
     it('should add a role to a user', (done) => {
       roleService.create('admin', {allowedModules: ['dynamicModule']}, (err, role) => {
         agent
@@ -158,12 +192,19 @@ describe('Route tests', () => {
         .expect(200, { user: 'peter2', pass: 'test', hairColor: 'blue' }, done);
     });
 
-    it('should get one user', (done) => {
+    it('should get one user again', (done) => {
       agent
         .get('/profile/user')
         .expect('Content-Type', /json/)
         .expect(200, {
-          peter: { roles: [], data: { user: 'peter', pass: 'test1234', pass2: 'test1234' } }
+          peter: {
+            roles: ['admin'],
+            data: {
+              user: 'peter',
+              pass: 'abc123',
+              bloodType: 'A+'
+            }
+          }
         }, done);
     });
   }); //user tests

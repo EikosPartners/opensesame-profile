@@ -63,6 +63,29 @@ router.post('/:id', (req, res, next) => {
   }
 });
 
+router.put('/', (req, res, next) => {
+  if(req.body && _.isObject(req.body)) {
+    userService.getAll((err, users) => {
+      if(err) {
+        return res.status(500).end();
+      }
+
+      let updatedUsers = _.pick(req.body, _.keys(users));
+      userService.updateAll(_.assignIn(users, updatedUsers), (err, users) => {
+        if(err) {
+          res.status(500).end();
+        } else {
+          console.log('users', users);
+          res.json(users);
+        }
+      });
+
+    });
+  } else {
+    res.status(500).end();
+  }
+});
+
 router.put('/:id', (req, res, next) => {
   if(req.body) {
     userService.get(req.params.id, (err, user) => {

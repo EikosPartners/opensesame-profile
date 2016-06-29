@@ -27,6 +27,15 @@ module.exports = class JsonStorageService {
     });
   }
 
+  updateAll(json, callback) {    
+    fsWrapper.jsonToFile(this.file, json, (err, res) => {
+      if(err) {
+        return callback(err);
+      }
+      callback(null, res.data);
+    });
+  }
+
   update(id, obj, callback) {
     fsWrapper.fileToJson(this.file, (err, json) => {
       if(err) {
@@ -86,7 +95,7 @@ module.exports = class JsonStorageService {
       if(err) {
         return callback(null, {});
       }
-      
+
       callback(null, json);
     });
   }
