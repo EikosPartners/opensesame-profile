@@ -1,34 +1,52 @@
-var fsWrapper = require('ep-utils').fsWrapper;
+var fsw = require('ep-utils/fsWrapper');
 var _ = require('lodash');
+
+var id = 0;
 
 module.exports = class JsonStorageService {
 
-  constructor(file) {
+  constructor(file, keyId) {
+    // console.log('constructing JsonStorageService: ', file);
+    // this.id = id++;
+    // if(file === 'users.json') {
+    //   var stack = new Error().stack
+    //   console.log(this.id + ': ' + stack);
+    // }
     this.file = file;
-  }
-
-  create(id, obj, callback) {
-    fsWrapper.fileToJson(this.file, (err, json) => {
-      if(err) {
-        json = {};
+    this.keyId = keyId || 'username';
+    this.cache = {};
+    fsw.fileToJson(this.file, (err, json) => {
+      // console.log(this.file + ':', json);
+      if(!err && _.isArray(json)) {
+        this.cache = _.keyBy(json, this.keyId);
       }
-
-      if(json.hasOwnProperty(id)) {
-        return callback('Already exists');
-      }
-
-      json[id] = obj;
-      fsWrapper.jsonToFile(this.file, json, (err, res) => {
-        if(err) {
-          return callback(err);
-        }
-        callback(null, obj);
-      });
     });
   }
 
-  updateAll(json, callback) {    
-    fsWrapper.jsonToFile(this.file, json, (err, res) => {
+  createById(id, obj, callback) {
+    // console.log('create: ', this.cache);
+    // console.log('CREATE', id, obj, this.cache);
+    if(this.cache.hasOwnProperty(id)) {
+      return callback('Already exists');
+    }
+
+    this.cache[id] = obj;
+    fsw.jsonToFile(this.file, _.values(this.cache), (err, res) => {
+      if(err) {
+        return callback(err);
+      }
+      callback(null, obj);
+    });
+  }
+
+  updateAll(json, callback) {
+    // console.log('updateAll: ', this.cache);
+    //overwrite the cache with changes and write it to the db
+    // console.log('json', json);
+    // console.log('this.cache', this.cache);
+    _.assignIn(this.cache, _.keyBy(json, this.keyId));
+    // console.log('this.cache', this.cache);
+    fsw.jsonToFile(this.file, _.values(this.cache), (err, res) => {
       if(err) {
         return callback(err);
       }
@@ -36,68 +54,60 @@ module.exports = class JsonStorageService {
     });
   }
 
-  update(id, obj, callback) {
-    fsWrapper.fileToJson(this.file, (err, json) => {
+  updateById(id, obj, callback) {
+    // console.log('update: ', this.cache);
+    if(this.cache.hasOwnProperty(id)) {
+      this.cache[id] = obj;
+    } else {
+      return callback('Does not exist');
+    }
+
+    fsw.jsonToFile(this.file, _.values(this.cache), (err, res) => {
       if(err) {
-        return callback('Does not exist');
+        return callback(err);
       }
+      callback(null, obj);
+    });
+  }
 
-      if(json.hasOwnProperty(id)) {
-        json[id] = obj;
-      } else {
-        return callback('Does not exist');
-      }
-
-      fsWrapper.jsonToFile(this.file, json, (err, res) => {
+  deleteById(id, callback) {
+    // console.log('delete: ', this.cache);
+    if(this.cache.hasOwnProperty(id)) {
+      let deleted = this.cache[id];
+      delete this.cache[id];
+      fsw.jsonToFile(this.file, _.values(this.cache), (err, res) => {
         if(err) {
           return callback(err);
         }
-        callback(null, obj);
+        callback(null, deleted);
       });
-    });
+    } else {
+      return callback('Does not exist');
+    }
   }
 
-  delete(id, callback) {
-    fsWrapper.fileToJson(this.file, (err, json) => {
-      if(err) {
-        return callback('Does not exist');
-      }
-
-      if(json.hasOwnProperty(id)) {
-        fsWrapper.jsonToFile(this.file, _.omit(json, id), (err, res) => {
-          if(err) {
-            return callback(err);
-          }
-          callback(null, json[id]);
-        });
-      } else {
-        return callback('Does not exist');
-      }
-    });
-  }
-
-  get(id, callback) {
-    fsWrapper.fileToJson(this.file, (err, json) => {
-      if(err) {
-        return callback('Not found');
-      }
-
-      if(json.hasOwnProperty(id)) {
-        callback(null, json[id]);
-      } else {
-        callback('Not found');
-      }
-    });
+  getById(id, callback) {
+    // console.log(this.file, this.id);
+    // if(this.id === 2) {
+    //   var stack = new Error().stack
+    //   console.log(this.id + ': ' + stack);
+    // }
+    // console.log('getById', this.cache);
+    if(this.cache.hasOwnProperty(id)) {
+      callback(null, this.cache[id]);
+    } else {
+      callback('Not found');
+    }
   }
 
   getAll(callback) {
-    fsWrapper.fileToJson(this.file, (err, json) => {
-      if(err) {
-        return callback(null, {});
-      }
-
-      callback(null, json);
-    });
+    // console.log(this.file, this.id);
+    // if(this.id === 1) {
+    //   var stack = new Error().stack
+    //   console.log(this.id + ': ' + stack);
+    // }
+    // console.log('getAll: ', this.cache);
+    callback(null, _.values(this.cache));
   }
 
 };

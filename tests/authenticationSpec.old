@@ -4,35 +4,36 @@ var chai = require('chai'),
   request = require('supertest'),
   opensesameProfile = require(path.join(__dirname, '../app.js')),
   jwt = require('jsonwebtoken'),
+  utils = require('./utils'),
   expect = chai.expect;
 
-var userStore = {
-
+var config = {
+  secret: 'test',
+  httpsOnly: false
 };
 
-var config = {
-    secret: 'test',
-    httpsOnly: false
-  };
-
-var app = opensesameProfile(config);
-
-app.get('/', function (req, res) {
-  res.send('Hello World!');
-});
-
-app.get('/test', function (req, res) {
-  expect(req).to.have.property('user');
-  expect(req.user).to.have.property('data');
-  expect(req.user).to.have.property('roles');
-  expect(req.user.data).to.be.an('object');
-  expect(req.user.data).to.have.ownProperty('user');
-  res.status(200).end();
-});
-
-var agent = request.agent(app);
-
 describe('Authentication Test', function () {
+  var agent;
+  before(function () {
+    utils.deleteTempDB();
+
+    var app = opensesameProfile(config);
+
+    app.get('/', function (req, res) {
+      res.send('Hello World!');
+    });
+
+    app.get('/test', function (req, res) {
+      // console.log('/test', req.user);
+      expect(req).to.have.property('user');
+      expect(req.user).to.have.property('username');
+      expect(req.user.username).to.equal('peter');
+      res.status(200).end();
+    });
+    agent = request.agent(app);
+  });
+
+  after(utils.deleteTempDB);
   describe('Register Test', function () {
     it('should show a register page', function (done) {
       agent.get('/register')
@@ -50,13 +51,16 @@ describe('Authentication Test', function () {
     it('should fail to register when passwords don\'t match', function (done) {
       agent.post('/auth/register')
         .type('form')
-        .send({ user: 'peter', pass: 'test1234', pass2: 'test12345' })
+        .send({ username: 'peter', password: 'test12345', password2: 'test1234' })
+        .expect((res) => {
+          expect(res.text).to.equal('Found. Redirecting to /login?unauthorized=Passwords%20do%20not%20match');
+        })
         .end(done);
     });
     it('should register a new user and login', function (done) {
       agent.post('/auth/register')
         .type('form')
-        .send({ user: 'peter', pass: 'test1234', pass2: 'test1234' })
+        .send({ username: 'peter', password: 'test1234', password2: 'test1234' })
         .expect('set-cookie', /auth=[\w\-_]+?\.[\w\-_]+?\.[\w\-_]+; Path=\/; HttpOnly/)
         .expect(function (res) {
           var userCookieRegex = /auth=([\w\-_]+?\.[\w\-_]+?\.[\w\-_]+); Path=\/; HttpOnly/g;
@@ -67,12 +71,8 @@ describe('Authentication Test', function () {
           expect(token).to.not.be.a('undefined');
           var decoded = jwt.verify(token, config.secret);
           expect(decoded).to.be.an('object');
-          expect(decoded).to.have.ownProperty('data');
-          expect(decoded.data).to.be.an('object');
-          expect(decoded.data).to.have.ownProperty('user');
-          expect(decoded.data).to.not.have.ownProperty('pass');
-          expect(decoded.data).to.not.have.ownProperty('pass2');
-          expect(decoded.data.user).to.equal('peter');
+          expect(decoded).to.have.ownProperty('username');
+          expect(decoded.username).to.equal('peter');
         })
         .end(done);
     });
@@ -108,14 +108,14 @@ describe('Authentication Test', function () {
     it('should not login on bad credentials', function(done) {
       agent.post('/auth/login')
         .type('form')
-        .send({ user: 'peter', pass: 'test12345' })
+        .send({ username: 'peter', password: 'test12345' })
         .expect(302)
         .end(done);
     });
     it('should login', function(done) {
       agent.post('/auth/login')
         .type('form')
-        .send({ user: 'peter', pass: 'test1234' })
+        .send({ username: 'peter', password: 'test1234' })
         .expect(302)
         .expect('set-cookie', /auth=[\w\-_]+?\.[\w\-_]+?\.[\w\-_]+; Path=\/; HttpOnly/)
         .expect(function (res) {
@@ -127,12 +127,8 @@ describe('Authentication Test', function () {
           expect(token).to.not.be.a('undefined');
           var decoded = jwt.verify(token, config.secret);
           expect(decoded).to.be.an('object');
-          expect(decoded).to.have.ownProperty('data');
-          expect(decoded.data).to.be.an('object');
-          expect(decoded.data).to.have.ownProperty('user');
-          expect(decoded.data).to.not.have.ownProperty('pass');
-          expect(decoded.data).to.not.have.ownProperty('pass2');
-          expect(decoded.data.user).to.equal('peter');
+          expect(decoded).to.have.ownProperty('username');
+          expect(decoded.username).to.equal('peter');
         })
         .end(done);
     });
@@ -148,6 +144,23 @@ describe('Authentication Test', function () {
       agent.get('/auth/verify')
         .expect(200)
         .end(done);
+    });
+    it('should refresh the user', function (done) {
+      agent.get('/auth/refresh')
+        .expect('set-cookie', /auth=[\w\-_]+?\.[\w\-_]+?\.[\w\-_]+; Path=\/; HttpOnly/)
+        .expect(function (res) {
+          var userCookieRegex = /auth=([\w\-_]+?\.[\w\-_]+?\.[\w\-_]+); Path=\/; HttpOnly/g;
+          var userCookie = res.headers['set-cookie'][0];
+          var matches = userCookieRegex.exec(userCookie);
+          var token = matches[1];
+          expect(token).to.not.be.a('null');
+          expect(token).to.not.be.a('undefined');
+          var decoded = jwt.verify(token, config.secret);
+          expect(decoded).to.be.an('object');
+          expect(decoded).to.have.ownProperty('username');
+          expect(decoded.username).to.equal('peter');
+        })
+        .expect(200, done);
     });
     it('should set req.user to the return value of checkUser', function (done) {
       agent.get('/test')

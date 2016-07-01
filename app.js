@@ -3,14 +3,16 @@ var _ = require('lodash');
 var debug = require('debug')('opensesame-profile');
 var bodyParser = require('body-parser');
 var opensesame = require('opensesame');
+var userRoutes = require('./routes/user');
 var JsonStorageService = require('./services/JsonStorageService');
 
-var userService = new JsonStorageService('users.json');
-
-var user = require('./routes/user');
-var role = require('./routes/role');
-
 module.exports = function(config, app) {
+
+  let userService = new JsonStorageService('users.json');
+  // var roleService = new JsonStorageService('roles.json');
+
+  let user = userRoutes(userService);
+  // var role = require('./routes/role')(roleService);
 
   if(!app) {
     app = express();
@@ -19,15 +21,17 @@ module.exports = function(config, app) {
   // required since routes use json
   app.use(bodyParser.json());
 
-  opensesame(_.extend(config, {
+  let profileConfig = {
     checkUser: (userObject, callback) => {
-      userService.get(userObject.user, (err, user) => {
+      // console.log('checkUser: ', userObject);
+      userService.getById(userObject.username, (err, user) => {
+        // console.log('userService: ', user);
         if(err) {
           return callback(err);
         } else {
           debug('app.js:27', user);
-          if(user.data.user === userObject.user && user.data.pass === userObject.pass)
-            return callback(null, { roles: user.roles, data: _.omit(user.data, ['pass', 'pass2']) });
+          if(user.username === userObject.username && user.password === userObject.password)
+            return callback(null, _.omit(user, 'password'));
           else {
             return callback('Incorrect password');
           }
@@ -35,36 +39,68 @@ module.exports = function(config, app) {
       });
     },
     registerUser: (userObject, callback) => {
-      let user = {
-        roles: [],
-        data: userObject
-      };
-      // console.log(user);
-      userService.create(userObject.user, user, (err, user) => {
+      // console.log(userObject);
+      if(userObject.password !== userObject.password2) {
+        return callback('Passwords don\'t match');
+      }
+      userObject.roles = [];
+      userService.createById(userObject.username, _.omit(userObject, ['password2']), (err, user) => {
+        // console.log(user);
         if(err) {
           return callback(err);
         } else {
-          return callback(null, { roles: user.roles, data: _.omit(user.data, ['pass', 'pass2']) });
+          return callback(null, _.omit(user, ['password']));
         }
       });
     },
     refreshUser: (jwtUserData, callback) => {
-      userService.get(jwtUserData.data.user, (err, user) => {
+      userService.getById(jwtUserData.username, (err, user) => {
         if(err) {
           return callback(err);
         } else {
-            return callback(null, { roles: user.roles, data: _.omit(user.data, ['pass', 'pass2']) });
+            return callback(null, _.omit(user, 'password'));
         }
       });
     },
-  }), app);
+  };
+  config = _.extend(config, profileConfig);
+
+  app = opensesame(config, app);
+  let opensesameUtils = opensesame.utils(config);
+
+  app.use(function (req, res, next) {    
+    userService.getById(req.user.username, (err, user) => {
+      if(err) {
+        debug(req);
+        debug(err);
+        debug('Logged in user that is not in the database!');
+        opensesameUtils.clearAuthCookie(req, res, next);
+        return res.redirect('/');
+      } else {
+        if(!_.isEqual(_.omit(req.user, ['iat', 'exp']), _.omit(user, 'password'))) {
+          debug('User was updated. Sending new cookies.');
+          debug('req.user', _.omit(req.user, ['iat', 'exp']));
+          debug('user', _.omit(user, 'password'));
+          let data = opensesameUtils.create(_.omit(user, ['password']), req, res, next);
+          opensesameUtils.setAuthCookie(data.token, req, res, next);
+          // console.log(data);
+          // console.log('req.user', req.user);
+          req.user = data.decoded;
+          // console.log('req.user', req.user);
+        }
+      }
+
+      next();
+
+    });
+  });
 
   if(config.middleware) {
     app.use(config.middleware);
   }
 
   app.use('/profile/user', user);
-  app.use('/profile/role', role);
+  // app.use('/profile/role', role);
 
   return app;
 

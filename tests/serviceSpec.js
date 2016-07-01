@@ -19,12 +19,12 @@ describe('Service tests', function () {
     } catch (ex) {
       expect(ex).to.not.be.a('null');
     }
-    testStorageManager.create('testKey', testData, function (err, result) {
+    testStorageManager.createById('testKey', testData, function (err, result) {
       expect(err).to.be.a('null');
       expect(result).to.deep.equal(testData);
       //file should exist
       expect(fs.lstatSync(testFile)).to.be.an('object');
-      testStorageManager.get('testKey', function (err, result) {
+      testStorageManager.getById('testKey', function (err, result) {
         expect(err).to.be.a('null');
         expect(result).to.deep.equal(testData);
         done();
