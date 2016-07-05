@@ -3,10 +3,23 @@
 /**
  * Module dependencies.
  */
-
-var app = require('../app')({secret: 'testSecret', httpsOnly: false});
 var debug = require('debug')('webpack-scalejs-server-demo:server');
 var http = require('http');
+var app = require('../app')({
+  secret: 'testSecret',
+  httpsOnly: false,
+  middleware: function (req, res, next) {
+    if(req.url.startsWith('/profile')) {
+      if(req.user.roles.indexOf('admin') !== -1) {
+        return next();
+      } else {
+        return res.status(401).end();
+      }
+    } else {
+      next();
+    }
+  }
+});
 
 /**
  * Get port from environment and store in Express.
