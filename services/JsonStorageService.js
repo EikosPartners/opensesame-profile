@@ -1,7 +1,8 @@
 var fsw = require('ep-utils/fsWrapper');
 var _ = require('lodash');
+var Watchpack = require("watchpack");
 
-var id = 0;
+// var id = 0;
 
 module.exports = class JsonStorageService {
 
@@ -15,6 +16,15 @@ module.exports = class JsonStorageService {
     this.file = file;
     this.keyId = keyId || 'username';
     this.cache = {};
+    this.updateCache();
+    this.wp = new Watchpack({});
+    this.wp.watch([this.file], [], Date.now() - 10000);
+    this.wp.on("change", function(filePath, mtime) {
+        this.updateCache();
+    });
+  }
+
+  updateCache() {
     fsw.fileToJson(this.file, (err, json) => {
       // console.log(this.file + ':', json);
       if(!err && _.isArray(json)) {

@@ -68,7 +68,7 @@ module.exports = function(config, app) {
   app = opensesame(config, app);
   let opensesameUtils = opensesame.utils(config);
 
-  app.use(function (req, res, next) {    
+  app.use(function (req, res, next) {
     userService.getById(req.user.username, (err, user) => {
       if(err) {
         debug(req);
@@ -76,8 +76,7 @@ module.exports = function(config, app) {
         debug('Logged in user that is not in the database!');
         opensesameUtils.clearAuthCookie(req, res, next);
         return res.redirect('/');
-      } else {
-        if(!_.isEqual(_.omit(req.user, ['iat', 'exp']), _.omit(user, 'password'))) {
+      } else if(!_.isEqual(_.omit(req.user, ['iat', 'exp']), _.omit(user, 'password'))) {
           debug('User was updated. Sending new cookies.');
           debug('req.user', _.omit(req.user, ['iat', 'exp']));
           debug('user', _.omit(user, 'password'));
@@ -86,8 +85,7 @@ module.exports = function(config, app) {
           // console.log(data);
           // console.log('req.user', req.user);
           req.user = data.decoded;
-          // console.log('req.user', req.user);
-        }
+          // console.log('req.user', req.user);        
       }
 
       next();
