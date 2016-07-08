@@ -20,7 +20,8 @@ module.exports = class JsonStorageService {
     this.wp = new Watchpack({});
     this.wp.watch([], [this.file], Date.now() - 10000);
     this.wp.on('change', (filePath, mtime) => {
-        this.updateCache();
+      console.log(this.file + ' was changed. Updating cache.')
+      this.updateCache();
     });
   }
 
